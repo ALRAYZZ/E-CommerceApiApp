@@ -1,0 +1,82 @@
+﻿@page "/shoppingcart"
+@using E_CommerceShared.Models
+@inject HttpClient Http
+
+<h3>Shopping Cart</h3>
+
+@if (Cart == null)
+{
+    <p>Loading... </p>
+}
+else if (Cart.CartItems == null || !Cart.CartItems.Any())
+{
+    <p>Cart is empty</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Cart.CartItems)
+            {
+                <tr>
+                    <td>@item.Product.Name</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.Product.Price.ToString("C")</td>
+                    <td>@(item.Quantity * item.Product.Price).ToString("C")</td>
+                    <td>
+                        <button class="btn btn-danger" @onclick="() => RemoveFromCart(item.ProductId)">Remove</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div>
+        <input type="number" @bind="ProductId" placeholder="Product ID" />
+        <input type="number" @bind="Quantity" placeholder="Quantity" />
+        <button class="btn btn-primary" @onclick="AddToCart">Add to Cart</button>
+    </div>
+}
+
+@code {
+	private ShoppingCart Cart { get; set; } = new ShoppingCart();
+    private int ProductId { get; set; }
+    private int Quantity { get; set; } = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userId = "12345"; // Replace with actual user ID
+        Cart = await Http.GetFromJsonAsync<ShoppingCart>($"api/shoppingcart/{userId}");
+    }
+
+    private async Task AddToCart()
+    {
+        var response = await Http.PostAsJsonAsync($"api/shoppingcart/add?productId={ProductId}&quantity={Quantity}", new { });
+        if (response.IsSuccessStatusCode)
+        {
+            var userId = "12345"; // Replace with actual user ID
+            Cart = await Http.GetFromJsonAsync<ShoppingCart>($"api/shoppingcart/{userId}");
+        }
+    }
+
+    private async Task RemoveFromCart(int productId)
+    {
+        var response = await Http.DeleteAsync($"api/shoppingcart/remove?productId={productId}");
+        if (response.IsSuccessStatusCode)
+        {
+            var userId = "12345"; // Replace with actual user ID
+            Cart = await Http.GetFromJsonAsync<ShoppingCart>($"api/shoppingcart/{userId}");
+        }
+    }
+}
+
+
