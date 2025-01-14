@@ -1,6 +1,9 @@
 ﻿@page "/shoppingcart"
 @using E_CommerceShared.Models
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 @inject HttpClient Http
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <h3>Shopping Cart</h3>
 
@@ -48,14 +51,23 @@ else
 }
 
 @code {
-	private ShoppingCart Cart { get; set; } = new ShoppingCart();
+    private ShoppingCartDto Cart { get; set; }
     private int ProductId { get; set; }
     private int Quantity { get; set; } = 1;
 
     protected override async Task OnInitializedAsync()
     {
-        var userId = "12345"; // Replace with actual user ID
-        Cart = await Http.GetFromJsonAsync<ShoppingCart>($"api/shoppingcart/{userId}");
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            var userId = user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (userId != null)
+            {
+				Cart = await Http.GetFromJsonAsync<ShoppingCartDto>($"api/shoppingcart/{userId}");
+            }
+        }
     }
 
     private async Task AddToCart()
@@ -63,8 +75,13 @@ else
         var response = await Http.PostAsJsonAsync($"api/shoppingcart/add?productId={ProductId}&quantity={Quantity}", new { });
         if (response.IsSuccessStatusCode)
         {
-            var userId = "12345"; // Replace with actual user ID
-            Cart = await Http.GetFromJsonAsync<ShoppingCart>($"api/shoppingcart/{userId}");
+			var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+			var user = authState.User;
+			var userId = user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+			if (userId != null)
+            {
+				Cart = await Http.GetFromJsonAsync<ShoppingCartDto>($"api/shoppingcart/{userId}");
+            }
         }
     }
 
@@ -73,10 +90,23 @@ else
         var response = await Http.DeleteAsync($"api/shoppingcart/remove?productId={productId}");
         if (response.IsSuccessStatusCode)
         {
-            var userId = "12345"; // Replace with actual user ID
-            Cart = await Http.GetFromJsonAsync<ShoppingCart>($"api/shoppingcart/{userId}");
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var userId = user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (userId != null)
+            {
+                Cart = await Http.GetFromJsonAsync<ShoppingCartDto>($"api/shoppingcart/{userId}");
+            }
         }
     }
 }
+
+
+
+
+
+
+
+
 
 

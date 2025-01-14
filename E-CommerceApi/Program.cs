@@ -25,6 +25,14 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 builder.Services.AddScoped<IShoppingCartService, ShoppingCartService>();
 builder.Services.AddScoped<PasswordResetService>();
 builder.Services.AddHttpClient();
+builder.Services.AddCors(options =>
+{
+	options.AddPolicy("AllowBlazorClient",
+		builder => builder
+			.WithOrigins("https://localhost:7161") // Replace with your Blazor WebAssembly URL
+			.AllowAnyHeader()
+			.AllowAnyMethod());
+});
 
 
 builder.Services.AddAuthentication(options =>

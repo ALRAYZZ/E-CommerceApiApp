@@ -1,0 +1,59 @@
+﻿@page "/login"
+@using E_CommerceApi.Models
+@using E_CommerceClient.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<h3>Login</h3>
+
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+	<div class="alert alert-danger">@ErrorMessage</div>
+}
+
+<EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+	<DataAnnotationsValidator />
+	<ValidationSummary />
+
+	<div class="form-group">
+		<label for="username">Username</label>
+		<InputText id="username" class="form-control" @bind-Value="loginModel.Username" />
+	</div>
+	<div class="form-group">
+		<label for="password">Password</label>
+		<InputText id="password" class="form-control" @bind-Value="loginModel.Password" />
+	</div>
+	<button type="submit" class="btn btn-primary">Login</button>
+</EditForm>
+
+
+
+@code {
+	private UserLoginModel loginModel = new UserLoginModel();
+	private string ErrorMessage;
+
+	private async Task HandleLogin()
+	{
+		var response = await Http.PostAsJsonAsync("https://localhost:7161/auth/login", loginModel);
+		if (response.IsSuccessStatusCode)
+		{
+			var token = await response.Content.ReadFromJsonAsync<TokenResponse>();
+			if (token != null)
+			{
+				await ((CustomAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticated(token.Token);
+				Navigation.NavigateTo("/");
+			}
+		}
+		else
+		{
+			ErrorMessage = "Invalid username or password";
+		}
+	}
+	public class TokenResponse
+	{
+		public string Token { get; set; }
+	}
+}

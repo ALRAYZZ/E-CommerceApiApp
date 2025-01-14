@@ -1,0 +1,20 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+<h3>Wlecome to E-Shop</h3>
+
+
+<AuthorizeView>
+	<Authorized>
+		<p>Welcome to your E-Shop</p>
+	</Authorized>
+	<NotAuthorized>
+		<Login />
+	</NotAuthorized>
+</AuthorizeView>
+
+@code {
+
+}

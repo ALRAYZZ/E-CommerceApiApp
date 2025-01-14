@@ -1,0 +1,83 @@
+﻿@page "/products"
+@using E_CommerceClient.Services
+@using E_CommerceShared.Models
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject IProductService ProductService
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<h3>Products</h3>
+
+@if (Products == null)
+{
+    <p>Loading... </p>
+}
+else if (!Products.Any())
+{
+    <p>No products available</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Price</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in Products)
+            {
+                <tr>
+                    <td>@product.Name</td>
+                    <td>@product.Description</td>
+                    <td>@product.Price.ToString("C")</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => AddToCart(product.Id)">Add to Cart</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<ProductDto> Products { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Products = await ProductService.GetProductsAsync();
+    }
+
+    private async Task AddToCart(int productId)
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userId = user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId != null)
+        {
+            var response = await Http.PostAsJsonAsync($"api/shoppingcart/add?productId={productId}&quantity=1", new { });
+            if (response.IsSuccessStatusCode)
+            {
+                // Optionally, update the UI or show a message
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
